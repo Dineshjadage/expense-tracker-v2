@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Expense Tracker Pro</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">💰</div>
+      <div class="brand-text">
+        <span class="brand-name">SpendSmart</span>
+        <span class="brand-sub">Expense Tracker</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-link active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-link" data-tab="transactions" onclick="switchTab('transactions')">
+        <span class="nav-icon">📋</span><span class="nav-label">Transactions</span>
+      </a>
+      <a class="nav-link" data-tab="analytics" onclick="switchTab('analytics')">
+        <span class="nav-icon">📊</span><span class="nav-label">Analytics</span>
+      </a>
+      <a class="nav-link" data-tab="budget" onclick="switchTab('budget')">
+        <span class="nav-icon">🎯</span><span class="nav-label">Budget</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-clear-all" onclick="clearAll()">🗑 Clear All</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-area">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div>
+        <h1 class="topbar-title" id="page-title">Dashboard</h1>
+        <p class="topbar-sub" id="current-date"></p>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <select id="month-filter" class="month-select" onchange="renderAll()">
+          <option value="all">All Time</option>
+        </select>
+        <button class="btn-add-top" data-bs-toggle="modal" data-bs-target="#addModal">+ Add Transaction</button>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD TAB ===== -->
+    <div class="tab-content" id="tab-dashboard">
+
+      <!-- Summary Cards -->
+      <div class="summary-grid">
+        <div class="scard scard-income">
+          <div class="scard-icon">📈</div>
+          <div class="scard-body">
+            <p class="scard-label">Total Income</p>
+            <h3 class="scard-value" id="total-income">₹0.00</h3>
+            <p class="scard-change" id="income-count">0 entries</p>
+          </div>
+        </div>
+        <div class="scard scard-expense">
+          <div class="scard-icon">📉</div>
+          <div class="scard-body">
+            <p class="scard-label">Total Expenses</p>
+            <h3 class="scard-value" id="total-expense">₹0.00</h3>
+            <p class="scard-change" id="expense-count">0 entries</p>
+          </div>
+        </div>
+        <div class="scard scard-balance">
+          <div class="scard-icon">🏦</div>
+          <div class="scard-body">
+            <p class="scard-label">Net Balance</p>
+            <h3 class="scard-value" id="net-balance">₹0.00</h3>
+            <p class="scard-change" id="savings-rate">0% savings rate</p>
+          </div>
+        </div>
+        <div class="scard scard-avg">
+          <div class="scard-icon">📅</div>
+          <div class="scard-body">
+            <p class="scard-label">Avg / Day</p>
+            <h3 class="scard-value" id="avg-day">₹0.00</h3>
+            <p class="scard-change" id="this-month-label">this month</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h6 class="chart-title">Monthly Income vs Expense</h6>
+          <canvas id="barChart" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <h6 class="chart-title">Expense by Category</h6>
+          <canvas id="doughnutChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="section-card">
+        <div class="section-header">
+          <h6 class="section-title">Recent Transactions</h6>
+          <a class="view-all" onclick="switchTab('transactions')">View All →</a>
+        </div>
+        <div id="recent-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== TRANSACTIONS TAB ===== -->
+    <div class="tab-content d-none" id="tab-transactions">
+      <div class="section-card">
+        <div class="section-header mb-3">
+          <h6 class="section-title">All Transactions</h6>
+          <span class="badge-count" id="tx-count-badge">0</span>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <input type="text" id="search-input" class="filter-input" placeholder="🔍 Search..."/>
+          <select id="filter-cat" class="filter-select" onchange="renderTransactions()">
+            <option value="all">All Categories</option>
+            <option>Food 🍔</option><option>Transport 🚗</option>
+            <option>Shopping 🛍️</option><option>Entertainment 🎬</option>
+            <option>Health 💊</option><option>Education 📚</option>
+            <option>Salary 💼</option><option>Freelance 💻</option>
+            <option>Other 📦</option>
+          </select>
+          <select id="filter-type" class="filter-select" onchange="renderTransactions()">
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="sort-by" class="filter-select" onchange="renderTransactions()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="highest">Highest Amount</option>
+            <option value="lowest">Lowest Amount</option>
+          </select>
+        </div>
+
+        <div id="tx-full-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== ANALYTICS TAB ===== -->
+    <div class="tab-content d-none" id="tab-analytics">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h6 class="chart-title">Spending Trend (Line)</h6>
+          <canvas id="lineChart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h6 class="chart-title">Income vs Expense Split</h6>
+          <canvas id="pieChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Category Breakdown Table -->
+      <div class="section-card">
+        <div class="section-header mb-3">
+          <h6 class="section-title">Category Breakdown</h6>
+        </div>
+        <div id="cat-breakdown"></div>
+      </div>
+
+      <!-- Top Expenses -->
+      <div class="section-card mt-3">
+        <div class="section-header mb-3">
+          <h6 class="section-title">Top 5 Expenses</h6>
+        </div>
+        <div id="top-expenses"></div>
+      </div>
+    </div>
+
+    <!-- ===== BUDGET TAB ===== -->
+    <div class="tab-content d-none" id="tab-budget">
+      <div class="budget-intro">
+        <h6 class="section-title mb-1">Monthly Budget Planner</h6>
+        <p style="font-size:0.82rem;color:#718096">Set spending limits per category and track how you're doing.</p>
+      </div>
+      <div id="budget-cards"></div>
+    </div>
+
+  </div><!-- /main-area -->
+
+
+  <!-- ADD TRANSACTION MODAL -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content custom-modal">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Transaction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="type-toggle mb-3">
+            <button class="type-btn expense-btn active" id="modal-exp-btn" onclick="setModalType('expense')">− Expense</button>
+            <button class="type-btn income-btn" id="modal-inc-btn" onclick="setModalType('income')">+ Income</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label-custom">Description *</label>
+            <input type="text" id="m-desc" class="custom-input" placeholder="e.g. Zomato dinner"/>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label-custom">Amount (₹) *</label>
+              <input type="number" id="m-amt" class="custom-input" placeholder="0.00" min="0"/>
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom">Date *</label>
+              <input type="date" id="m-date" class="custom-input"/>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label-custom">Category *</label>
+            <select id="m-cat" class="custom-input">
+              <option value="">-- Select Category --</option>
+              <option>Food 🍔</option><option>Transport 🚗</option>
+              <option>Shopping 🛍️</option><option>Entertainment 🎬</option>
+              <option>Health 💊</option><option>Education 📚</option>
+              <option>Salary 💼</option><option>Freelance 💻</option>
+              <option>Other 📦</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label-custom">Note (optional)</label>
+            <input type="text" id="m-note" class="custom-input" placeholder="Add a note..."/>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn-submit" id="submit-btn" onclick="addTransaction()">Add Transaction</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
